@@ -1,7 +1,4 @@
 ﻿  First_Step_For_Task.cpp
-c:\users\chenweixing\desktop\netease\first_fbx\first_step_for_task\first_step_for_task.cpp(37): warning C4018: “<”: 有符号/无符号不匹配
-c:\users\chenweixing\desktop\netease\first_fbx\first_step_for_task\first_step_for_task.cpp(402): warning C4018: “<”: 有符号/无符号不匹配
-c:\users\chenweixing\desktop\netease\first_fbx\first_step_for_task\first_step_for_task.cpp(408): warning C4018: “<”: 有符号/无符号不匹配
-c:\users\chenweixing\desktop\netease\first_fbx\first_step_for_task\first_step_for_task.cpp(459): warning C4018: “<”: 有符号/无符号不匹配
-c:\users\chenweixing\desktop\netease\first_fbx\first_step_for_task\first_step_for_task.cpp(466): warning C4018: “<”: 有符号/无符号不匹配
-  First_Step_For_Task.vcxproj -> C:\Users\chenweixing\Desktop\Netease\first_fbx\Debug\First_Step_For_Task.exe
+c:\users\chenweixing\desktop\netease\internproject\first_step_for_task\first_step_for_task.cpp(47): warning C4018: “<”: 有符号/无符号不匹配
+c:\users\chenweixing\desktop\netease\internproject\first_step_for_task\first_step_for_task.cpp(52): warning C4018: “<”: 有符号/无符号不匹配
+  First_Step_For_Task.vcxproj -> C:\Users\chenweixing\Desktop\Netease\internProject\Debug\First_Step_For_Task.exe

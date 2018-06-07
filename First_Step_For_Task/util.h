@@ -36,5 +36,6 @@ public:
 	bool operator()(const Edge& edge_1, const Edge& edge_2)const;
 };
 
-double dot(FbxVector4 normal_1, FbxVector4 normal_2);
-double vectorLength(FbxVector4 normal);
+double dot(FbxVector4& normal_1, FbxVector4& normal_2);
+
+bool theNearPoint(FbxVector4 p, FbxVector4 q);

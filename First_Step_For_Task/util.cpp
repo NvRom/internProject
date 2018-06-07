@@ -17,7 +17,13 @@ void swap(int & p, int & q)
 
 double dot(FbxVector4 &normal_1, FbxVector4 &normal_2)
 {
-	return normal_1[0] * normal_1[0] + normal_1[1] * normal_1[1] + normal_1[2] * normal_1[2];
+	return normal_1[0] * normal_2[0] + normal_1[1] * normal_2[1] + normal_1[2] * normal_2[2];
+}
+
+//判断两个点是否相邻
+bool theNearPoint(FbxVector4 p, FbxVector4 q)
+{
+	return (p[0] - q[0])*(p[0] - q[0]) + (p[1] - q[1])*(p[1] - q[1]) + (p[2] - q[2])*(p[2] - q[2]) < THRESHOLD;
 }
 
 Circle::Circle() :_size(0) {};
