@@ -100,7 +100,7 @@ Plane computerPlane(Point3D a, Point3D b, Point3D c)
 Point3D& cross(Point3D A, Point3D B)
 {
 	Point3D p;
-	p.x = A.x*B.y - A.y*B.x;
+	p.x = A.y*B.z - A.z*B.y;
 	p.y = A.z*B.x - A.x*B.z;
 	p.z = A.x*B.y - A.y*B.x;
 	return p;

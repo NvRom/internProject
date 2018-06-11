@@ -4,7 +4,8 @@
 //更为一般的是，合理的阈值设定应该不破坏原来的多边形关系
 //假设threshold为0.01，表示坐标轴上的差值要小于0.01才可能被认为是相邻点
 const double THRESHOLD = 0.0002;
-const double HASHVALUESTEPLENGTH = 0.00000005;
+const double HASHVALUESTEPLENGTH = 0.00000005;//hash函数发生冲突时，步长
+const double INTERSECT_PLANE_EPSILON = 0.00001;//判断三个面是否相交于一点的阈值
 
 int min(int p, int q);
 int max(int p, int q);
@@ -15,8 +16,8 @@ struct Edge
 	int controlPoint[2];
 	int UVIndex[2];
 	FbxVector4 normal[2];
-	int polygonID;
-	Edge(int point1, int point2, int UV1, int UV2, FbxVector4 normal1, FbxVector4 normal2, int polygonID);
+	Plane plane;
+	Edge(int point1, int point2, int UV1, int UV2, FbxVector4 normal1, FbxVector4 normal2, Plane plane);
 	Edge(int point1, int point2);
 
 };
@@ -39,3 +40,6 @@ public:
 double dot(FbxVector4& normal_1, FbxVector4& normal_2);
 
 bool theNearPoint(FbxVector4 p, FbxVector4 q);
+
+//生成Plane
+Plane computerPlane(FbxVector4 normal, FbxVector4 point);
