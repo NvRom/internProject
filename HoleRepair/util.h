@@ -12,6 +12,12 @@ int min(int p, int q);
 int max(int p, int q);
 void swap(int& p, int& q);
 
+struct Plane
+{
+	FbxVector4 _normal;
+	double _distance;
+};
+
 struct Edge
 {
 	int controlPoint[2];
@@ -23,14 +29,15 @@ struct Edge
 
 };
 
-struct Circle
+struct Ring
 {
 	std::vector<Edge> _mData;
 	unsigned _size;
-	Circle();
-	Circle(std::vector<Edge> _mData);
+	Ring();
+	Ring(std::vector<Edge> _mData);
 	bool insert(Edge _edge);
 };
+
 
 class edgeSortCriterion
 {
@@ -38,13 +45,22 @@ public:
 	bool operator()(const Edge& edge_1, const Edge& edge_2)const;
 };
 
-double dot(FbxVector4& normal_1, FbxVector4& normal_2);
+//单位化向量
+FbxVector4 normalize(FbxVector4& A);
 
+//向量点乘
+double dot(const FbxVector4 &vector_1, const FbxVector4 &vector_2);
+
+FbxVector4 cross(const FbxVector4 vector_1, const FbxVector4 vector_2);
+
+//判断是否是临近点
 bool theNearPoint(FbxVector4 p, FbxVector4 q);
 
-//生成Plane
+//根据面的法向量以及面上的一点，计算面的表达式
 Plane computerPlane(FbxVector4 normal, FbxVector4 point);
+
 //计算向量的长度
 double celVectorLength(FbxVector4 _vector);
 
-double celDistanceBetweenTwoPoints(FbxVector4 p1,FbxVector4 p2);
+//计算两点之间的距离
+double celDistanceBetweenTwoPoints(FbxVector4 p1, FbxVector4 p2);

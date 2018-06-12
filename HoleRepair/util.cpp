@@ -15,9 +15,28 @@ void swap(int & p, int & q)
 	q = temp;
 }
 
-double dot(FbxVector4 &normal_1, FbxVector4 &normal_2)
+FbxVector4 normalize(FbxVector4 & A)
 {
-	return normal_1[0] * normal_2[0] + normal_1[1] * normal_2[1] + normal_1[2] * normal_2[2];
+	double sum = sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
+	A[0] /= sum;
+	A[1] /= sum;
+	A[2] /= sum;
+	return A;
+}
+
+//计算两个向量的点乘
+double dot(const FbxVector4 &vector_1, const FbxVector4 &vector_2)
+{
+	return vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1] + vector_1[2] * vector_2[2];
+}
+
+FbxVector4 cross(const FbxVector4 vector_1, const FbxVector4 vector_2)
+{
+	FbxVector4 p;
+	p[0] = vector_1[1] * vector_2[2] - vector_1[2] * vector_2[1];
+	p[1] = vector_1[2] * vector_2[0] - vector_1[0] * vector_2[2];
+	p[2] = vector_1[0] * vector_2[1] - vector_1[1] * vector_2[0];
+	return p;
 }
 
 //判断两个点是否相邻
@@ -26,29 +45,31 @@ bool theNearPoint(FbxVector4 p, FbxVector4 q)
 	return (p[0] - q[0])*(p[0] - q[0]) + (p[1] - q[1])*(p[1] - q[1]) + (p[2] - q[2])*(p[2] - q[2]) < THRESHOLD;
 }
 
+//根据面的法向量以及面上的一点，计算面的表达式
 Plane computerPlane(FbxVector4 normal, FbxVector4 point)
 {
 	Plane p;
-	Point3D _p(normal),_v(point);
-	p.n = normalize(_p);
-	p.d = dot(p.n, _v);
+	p._normal = normalize(normal);
+	p._distance = dot(p._normal, point);
 	return p;
 }
 
+//计算向量的长度
 double celVectorLength(FbxVector4 _vector)
 {
 	return sqrt(_vector[0] * _vector[0] + _vector[1] * _vector[1] + _vector[2] * _vector[2]);
 }
 
+//计算两点之间的距离
 double celDistanceBetweenTwoPoints(FbxVector4 p1, FbxVector4 p2)
 {
 	FbxVector4 _p = p1 - p2;
 	return sqrt(dot(_p, _p));
 }
 
-Circle::Circle() :_size(0) {};
-Circle::Circle(std::vector<Edge> _mData) :_mData(_mData), _size(_mData.size()) {}
-bool Circle::insert(Edge _edge)
+Ring::Ring() :_size(0) {};
+Ring::Ring(std::vector<Edge> _mData) :_mData(_mData), _size(_mData.size()) {}
+bool Ring::insert(Edge _edge)
 {
 	_mData.push_back(_edge);
 	++_size;
@@ -56,7 +77,8 @@ bool Circle::insert(Edge _edge)
 }
 ;
 
-Edge::Edge(int point1, int point2, int UV1, int UV2, FbxVector4 normal1, FbxVector4 normal2, Plane plane) :controlPoint{ point1,point2 }, UVIndex{ UV1,UV2 }, normal{ normal1,normal2 }, plane(plane){};
+Edge::Edge(int point1, int point2, int UV1, int UV2, FbxVector4 normal1, FbxVector4 normal2, Plane plane) 
+	:controlPoint{ point1,point2 }, UVIndex{ UV1,UV2 }, normal{ normal1,normal2 }, plane(plane){};
 Edge::Edge(int point1, int point2) :controlPoint{ point1,point2 } {};
 
 bool edgeSortCriterion::operator()(const Edge& edge_1, const Edge& edge_2)const
