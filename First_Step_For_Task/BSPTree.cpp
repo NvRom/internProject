@@ -56,7 +56,7 @@ Point3D & Point3D::scalar(double rhs)
 //Polygon3D初始化函数
 Polygon3D::Polygon3D() :_size(0) {};
 
-Polygon3D::Polygon3D(vector<Point3D>polygonData) :_mData(polygonData), _size(polygonData.size()) {};
+Polygon3D::Polygon3D(std::vector<Point3D>polygonData) :_mData(polygonData), _size(polygonData.size()) {};
 
 Polygon3D::Polygon3D(std::vector<Point3D> polygonData, int _size) : _size(_size), _mData(polygonData.begin(), polygonData.begin() + _size) {};
 
@@ -162,7 +162,7 @@ BSPNode* buildBSPTree(std::vector<Polygon3D>&polygons, int depth)
 	//递归执行构造子树操作，最后返回root结点
 	BSPNode* frontTree = buildBSPTree(frontPolygons, depth + 1);
 	BSPNode* behindTree = buildBSPTree(behindPolygons, depth + 1);
-	return new BSPNode(frontTree,behindTree,splitPlane);
+	return new BSPNode(frontTree, behindTree, splitPlane);
 }
 
 Plane getPlaneFromPolygon(Polygon3D polygon)
