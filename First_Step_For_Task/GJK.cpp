@@ -29,6 +29,14 @@ Point Point::cross(Point d)
 	return crossproduct;
 }
 
+void normalize(FbxVector4& normal)
+{
+	double sum = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+	normal[0] /= sum;
+	normal[1] /= sum;
+	normal[2] /= sum;
+}
+
 void Point::set(Point d)
 {
 	x = d.x;
@@ -45,17 +53,25 @@ Point Point::operator-(Point rhs)
 	return returnPoint;
 }
 
+Shape Shape::expansion()
+{
+	Shape returnShape(this->shape, this->normal);
+	FbxVector4 _normal = this->normal;
+	for (int i = 0; i < this->_size; ++i)
+	{
+		returnShape[i].x += EXPANSION * _normal[0];
+		returnShape[i].y += EXPANSION * _normal[1];
+		returnShape[i].z += EXPANSION * _normal[2];
+	}
+	return returnShape;
+}
+
 Point & Shape::operator[](unsigned index)
 {
 	if (index < _size)
 	{
 		return shape[index];
 	}
-}
-
-unsigned Shape::size()
-{
-	return _size;
 }
 
 Point simplex::getLast(void)

@@ -15,35 +15,40 @@ bool check_collision = gjk(point1, point2, dim_ts, dim_point2); // 0 ... no coll
 #include <fbxsdk.h>
 #include <vector>
 const double PI = acos(-1.0f);
+const double EXPANSION = 0.01;
 
 // GJK functions
 
 
 class Point
 {
-	public:
-		double x;
-		double y;
-		double z;
+public:
+	double x;
+	double y;
+	double z;
 
-		Point() : x(0.0), y(0.0), z(0.0) {};
-		Point(FbxVector4 p) :x(p[0]), y(p[1]), z(p[2]) {};
-		Point(double x,double y, double z) :x(x), y(y), z(z) {};
-		Point negate();
-		double dot(Point d);
-		Point cross(Point cpt);
-		void set(Point set);
-		Point operator-(Point rhs);
+	Point() : x(0.0), y(0.0), z(0.0) {};
+	Point(FbxVector4 p) :x(p[0]), y(p[1]), z(p[2]) {};
+	Point(double x, double y, double z) :x(x), y(y), z(z) {};
+	Point negate();
+	double dot(Point d);
+	Point cross(Point cpt);
+	void set(Point set);
+	Point operator-(Point rhs);
 };
 
 class Shape
 {
 public:
-	Shape(std::vector<Point>shape) :shape(shape),_size(shape.size()) {};
+	Shape(std::vector<Point> shape, FbxVector4 normal) :shape(shape), _size(shape.size()), normal(normal) {};
+	void set(std::vector<Point>shape, FbxVector4 normal) { this->shape = shape; this->normal = normal; };
+	Shape expansion();
 	Point& operator[](unsigned index);
-	unsigned size();
+	unsigned size() { return _size; };
+	FbxVector4 getNormal() { return normal; };
 private:
 	std::vector<Point> shape;
+	FbxVector4 normal;
 	unsigned _size;
 };
 
@@ -71,7 +76,7 @@ class simplex
 };
 // class & functions for the simplex(storing the Points)
 
-
+void normalize(FbxVector4& normal);
 bool gjk(Shape A, Shape B);
 
 #endif

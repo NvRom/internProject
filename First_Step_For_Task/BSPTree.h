@@ -17,7 +17,7 @@ enum PointTOPlane
 
 const int MAX_DEPTH = 10;
 const int MIN_LEAF_SIZE = 5;
-const double PLANE_THICKNESS_EPSILON = 0.00000001;
+const double PLANE_THICKNESS_EPSILON = 0.00001;
 const int MAX_POINTS = 50;
 
 //3dµã
