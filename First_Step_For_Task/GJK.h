@@ -16,6 +16,8 @@ bool check_collision = gjk(point1, point2, dim_ts, dim_point2); // 0 ... no coll
 #include <vector>
 const double PI = acos(-1.0f);
 const double EXPANSION = 0.01;
+const double POINTDISTANCE = 0.01;//小于这个阈值的点视为同一个点
+const double PLANETHICNESS = 0.0001;
 
 // GJK functions
 
@@ -34,20 +36,28 @@ public:
 	double dot(Point d);
 	Point cross(Point cpt);
 	void set(Point set);
+	bool equal(Point& p);
 	Point operator-(Point rhs);
 };
+
+double absoluteValue(Point v);
 
 class Shape
 {
 public:
-	Shape(std::vector<Point> shape, FbxVector4 normal) :shape(shape), _size(shape.size()), normal(normal) {};
-	void set(std::vector<Point>shape, FbxVector4 normal) { this->shape = shape; this->normal = normal; };
+	Shape() :_size(0) {};
+	Shape(std::vector<Point> shape, FbxVector4 normal) :_shape(shape), _size(shape.size()), normal(normal) {};
+	void set(std::vector<Point>shape, FbxVector4 normal, std::vector<int>vertexIndex, unsigned _size) { this->_shape = shape; this->normal = normal; this->vertexIndex = vertexIndex; this->_size = _size; };
 	Shape expansion();
 	Point& operator[](unsigned index);
 	unsigned size() { return _size; };
 	FbxVector4 getNormal() { return normal; };
+	void setNormal(FbxVector4 normal) { this->normal = normal; };
+	void insert(Point p, int index) { _shape.push_back(p); ++_size; vertexIndex.push_back(index); };
+	int getVertexAt(unsigned index) { return vertexIndex[index]; };
 private:
-	std::vector<Point> shape;
+	std::vector<Point> _shape;
+	std::vector<int> vertexIndex;
 	FbxVector4 normal;
 	unsigned _size;
 };

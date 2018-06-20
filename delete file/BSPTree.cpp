@@ -135,7 +135,7 @@ BSPNode* buildBSPTree(std::vector<Polygon3D>&polygons, int depth)
 	}
 	//得到最佳分割面
 	Plane splitPlane = pickSplittingPlane(polygons);
-	vector<Polygon3D>frontPolygons, behindPolygons;
+	std::vector<Polygon3D>frontPolygons, behindPolygons;
 	//遍历整个polygons，根据分割面将polygons分割成两部分
 	for (int i = 0; i < numPolygons; ++i)
 	{

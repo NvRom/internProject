@@ -1,8 +1,6 @@
-#include <math.h>
-#include <iostream>
-#include <cstdlib>	
+#include <stdafx.h>
+#include "GJK.h"
 
-#include "gjk.h"
 
 Point Point::negate()
 {
@@ -29,6 +27,11 @@ Point Point::cross(Point d)
 	return crossproduct;
 }
 
+double absoluteValue(Point v)
+{
+	return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+}
+
 void normalize(FbxVector4& normal)
 {
 	double sum = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
@@ -44,6 +47,12 @@ void Point::set(Point d)
 	z = d.z;
 }
 
+bool Point::equal(Point & p)
+{
+	Point v = *this - p;
+	return sqrt(v.x*v.x + v.y*v.y + v.z*v.z) < POINTDISTANCE;
+}
+
 Point Point::operator-(Point rhs)
 {
 	Point returnPoint;
@@ -55,9 +64,9 @@ Point Point::operator-(Point rhs)
 
 Shape Shape::expansion()
 {
-	Shape returnShape(this->shape, this->normal);
+	Shape returnShape(this->_shape, this->normal);
 	FbxVector4 _normal = this->normal;
-	for (int i = 0; i < this->_size; ++i)
+	for (unsigned i = 0; i < this->_size; ++i)
 	{
 		returnShape[i].x += EXPANSION * _normal[0];
 		returnShape[i].y += EXPANSION * _normal[1];
@@ -70,7 +79,7 @@ Point & Shape::operator[](unsigned index)
 {
 	if (index < _size)
 	{
-		return shape[index];
+		return _shape[index];
 	}
 }
 
@@ -133,7 +142,7 @@ void simplex::del(int id) // id = 1 ... 4
 	}
 	else
 	{
-		double cx[2], cy[2], cz[2];
+		double cx[3], cy[3], cz[3];
 		int c = 0;
 		id--; 
 		for (int i = 0; i < 4; i++)
@@ -210,7 +219,7 @@ Point middlePoint(Shape A)
 {
 	Point returnPoint;
 	unsigned _size = A.size();
-	for (int i = 0 ; i < _size; i++)
+	for (unsigned i = 0 ; i < _size; i++)
 	{
 		returnPoint.x += A[i].x;
 		returnPoint.y += A[i].y;
@@ -231,7 +240,7 @@ Point getFarthestPointInDirection(Shape A, Point direction)
 
 	double dotp = 0.0;
 	unsigned dim_a = A.size();
-	for (int i = 0; i < dim_a; i++)
+	for (unsigned i = 0; i < dim_a; i++)
 	{
 		dotp = dotProd(A[i].x, A[i].y, A[i].z, direction.x, direction.y, direction.z);
 
@@ -369,10 +378,6 @@ bool containsOrigin(simplex& simplex, Point& d)
 					d.set(ac_c_ab); // set new search direction
 				}
 			}
-			else
-			{
-				std::cout << "error(number pos/neg)" << std::endl;
-			}
 		}
 	}
 	else if (simplex.size() == 3) // 3 elements in the simplex
@@ -494,7 +499,7 @@ bool gjk(Shape A, Shape B) // main gjk function -> point A, point B, dimension o
 	while (true)
 	{
 		simplex.add(support(A, B, d));
-		if (simplex.getLast().dot(d) <= 0) // no collision -> break
+		if (simplex.getLast().dot(d) < 0) // no collision -> break
 		{
 			return false;
 		}
