@@ -1,8 +1,5 @@
-#include <math.h>
-#include <iostream>
-#include <cstdlib>	
+#include "stdafx.h"
 
-#include "gjk.h"
 
 Point Point::negate()
 {
@@ -14,7 +11,7 @@ Point Point::negate()
 
 double Point::dot(Point d)
 {
-	double dotproduct = x*d.x + y*d.y + z*d.z;
+	double dotproduct = x * d.x + y * d.y + z * d.z;
 	return dotproduct;
 }
 
@@ -22,9 +19,9 @@ Point Point::cross(Point d)
 {
 	Point crossproduct;
 
-	crossproduct.x = y*d.z - z*d.y;
-	crossproduct.y = z*d.x-x*d.z;
-	crossproduct.z = x*d.y - y*d.x;
+	crossproduct.x = y * d.z - z * d.y;
+	crossproduct.y = z * d.x - x * d.z;
+	crossproduct.z = x * d.y - y * d.x;
 
 	return crossproduct;
 }
@@ -36,6 +33,12 @@ void Point::set(Point d)
 	z = d.z;
 }
 
+bool Point::equal(Point & p)
+{
+	Point v = *this - p;
+	return sqrt(v.x*v.x + v.y*v.y + v.z*v.z) < POINTDISTANCE;
+}
+
 Point Point::operator-(Point rhs)
 {
 	Point returnPoint;
@@ -45,17 +48,34 @@ Point Point::operator-(Point rhs)
 	return returnPoint;
 }
 
+Point Point::operator+(Point rhs)
+{
+	Point returnPoint;
+	returnPoint.x = this->x + rhs.x;
+	returnPoint.y = this->y + rhs.y;
+	returnPoint.z = this->z + rhs.z;
+	return returnPoint;
+}
+
+Shape Shape::expansion()
+{
+	Shape returnShape(this->_shape, this->normal);
+	FbxVector4 _normal = this->normal;
+	for (unsigned i = 0; i < this->_size; ++i)
+	{
+		returnShape[i].x += EXPANSION * _normal[0];
+		returnShape[i].y += EXPANSION * _normal[1];
+		returnShape[i].z += EXPANSION * _normal[2];
+	}
+	return returnShape;
+}
+
 Point & Shape::operator[](unsigned index)
 {
 	if (index < _size)
 	{
-		return shape[index];
+		return _shape[index];
 	}
-}
-
-unsigned Shape::size()
-{
-	return _size;
 }
 
 Point simplex::getLast(void)
@@ -117,9 +137,9 @@ void simplex::del(int id) // id = 1 ... 4
 	}
 	else
 	{
-		double cx[2], cy[2], cz[2];
+		double cx[3], cy[3], cz[3];
 		int c = 0;
-		id--; 
+		id--;
 		for (int i = 0; i < 4; i++)
 		{
 			cx[c] = x[i];
@@ -162,7 +182,6 @@ void simplex::add(Point simplex_add)
 	z[i] = simplex_add.z;
 }
 
-
 void simplex::set_zero(void)
 {
 	for (int i = 0; i < 4; i++)
@@ -173,19 +192,30 @@ void simplex::set_zero(void)
 	}
 }
 
+double absoluteValue(Point v)
+{
+	return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+}
+
+void normalize(FbxVector4& normal)
+{
+	double sum = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+	normal[0] /= sum;
+	normal[1] /= sum;
+	normal[2] /= sum;
+}
+
 double dotProd(double x1, double y1, double z1, double x2, double y2, double z2)
 {
-	return (x1*x2)+(y1*y2)+(z1*z2);
+	return (x1*x2) + (y1*y2) + (z1*z2);
 }
 
 Point tripleCrossProd(Point a, Point b, Point c)
 {
 	Point tripleReturn;
-
 	tripleReturn.x = b.x*a.dot(c) - c.x*a.dot(b);
 	tripleReturn.y = b.y*a.dot(c) - c.y*a.dot(b);
 	tripleReturn.z = b.z*a.dot(c) - c.z*a.dot(b);
-
 	return tripleReturn;
 }
 
@@ -194,28 +224,25 @@ Point middlePoint(Shape A)
 {
 	Point returnPoint;
 	unsigned _size = A.size();
-	for (int i = 0 ; i < _size; i++)
+	for (unsigned i = 0; i < _size; i++)
 	{
 		returnPoint.x += A[i].x;
 		returnPoint.y += A[i].y;
 		returnPoint.z += A[i].z;
 	}
-	returnPoint.x = returnPoint.x/ _size;
-	returnPoint.y = returnPoint.y/ _size;
-	returnPoint.z = returnPoint.z/ _size;
-
+	returnPoint.x = returnPoint.x / _size;
+	returnPoint.y = returnPoint.y / _size;
+	returnPoint.z = returnPoint.z / _size;
 	return returnPoint;
-
 }
 
 Point getFarthestPointInDirection(Shape A, Point direction)
 {
 	double maxVal = -DBL_MAX;
 	int maxIndex = -1;
-
 	double dotp = 0.0;
 	unsigned dim_a = A.size();
-	for (int i = 0; i < dim_a; i++)
+	for (unsigned i = 0; i < dim_a; i++)
 	{
 		dotp = dotProd(A[i].x, A[i].y, A[i].z, direction.x, direction.y, direction.z);
 
@@ -233,7 +260,7 @@ Point support(Shape A, Shape B, Point direction)
 	Point p1 = getFarthestPointInDirection(A, direction);
 	Point p2 = getFarthestPointInDirection(B, direction.negate());
 
-	return p1-p2;
+	return p1 - p2;
 
 }
 
@@ -242,142 +269,113 @@ bool containsOrigin(simplex& simplex, Point& d)
 	Point a = simplex.getLast();
 	Point a0 = a;
 	a0.negate();
-
+	//size为4时，核心部分
 	if (simplex.size() == 4)
 	{
 		Point p_d = simplex.get(0);
 		Point p_c = simplex.get(1);
 		Point p_b = simplex.get(2);
-		// AC
 		Point ac = p_c - a;
-		// AB
 		Point ab = p_b - a;
-		// AD
 		Point ad = p_d - a;
-		
 		// ABC
-		Point mmp_abc; // mass middle point of the triangle ABC
-		mmp_abc.x = (a.x + p_b.x + p_c.x)/3;
-		mmp_abc.y = (a.y + p_b.y + p_c.y)/3;
-		mmp_abc.z = (a.z + p_b.z + p_c.z)/3;
-		Point ac_c_ab = ac.cross(ab); // ac_c_ab = AC x AB  -> normal of the (triangle) surface
+		Point ac_c_ab = ac.cross(ab);
 		double v_abc = ac_c_ab.dot(a0);
-
 		// ABD
-		Point mmp_abd; // mass middle point of the triangle ABC
-		mmp_abd.x = (a.x + p_b.x + p_d.x)/3;
-		mmp_abd.y = (a.y + p_b.y + p_d.y)/3;
-		mmp_abd.z = (a.z + p_b.z + p_d.z)/3;
-		Point ab_c_ad = ab.cross(ad); // ab_c_ad = AB x AD  -> normal of the (triangle) surface
+		Point ab_c_ad = ab.cross(ad);
 		double v_abd = ab_c_ad.dot(a0);
-
 		//ACD
-		Point mmp_acd; // mass middle point of the triangle ABC
-		mmp_acd.x = (a.x + p_c.x + p_d.x)/3;
-		mmp_acd.y = (a.y + p_c.y + p_d.y)/3;
-		mmp_acd.z = (a.z + p_c.z + p_d.z)/3;
-		Point ad_c_ac = ad.cross(ac); // ad_c_ac = AD x AC  -> normal of the (triangle) surface
+		Point ad_c_ac = ad.cross(ac);
 		double v_acd = ad_c_ac.dot(a0);
-
 
 		int amount_neg = 0;
 		int amount_pos = 0;
-
-		if (v_acd > 0)
+		//考虑健壮性，用EPSILON表示容错值
+		if (v_acd > PLANETHICNESS)
 			amount_pos++;
 		else
 			amount_neg++;
-
-		if (v_abd > 0)
+		if (v_abd > PLANETHICNESS)
 			amount_pos++;
 		else
 			amount_neg++;
-
-		if (v_abc > 0)
+		if (v_abc > PLANETHICNESS)
 			amount_pos++;
 		else
 			amount_neg++;
-
-		if (amount_pos == 3) // origin enclosed in the tetrahedron -> we got a collision
+		//当有一个为3时，说明包含原点
+		if (amount_pos == 3)
 		{
 			return true;
 		}
-		else if (amount_neg == 3) // origin enclosed in the tetrahedron -> we got a collision
+		else if (amount_neg == 3)
 		{
 			return true;
 		}
-		else // ditch one point, determine new search direction
+		else
 		{
+			//根据不同的类型，确定需要在simplex里删除的点以及方向
+			//删除策略可见论文以及书本
 			if (amount_neg == 2 && amount_pos == 1)
 			{
 
-				if(v_acd > 0) // v_acd < 0 -> new search direction: ad_c_ac, ditch point b
+				if (v_acd > PLANETHICNESS)
 				{
-					simplex.del(3); // remove point b of the simplex list
-					d.set(ad_c_ac); // set new search direction
+					simplex.del(3); 
+					d.set(ad_c_ac);
 				}
-				else if (v_abd > 0) // v_abd < 0 ->  new search direction: ab_c_ad, ditch point c
+				else if (v_abd > PLANETHICNESS)
 				{
-					simplex.del(2); // remove point b of the simplex list
-					d.set(ab_c_ad); // set new search direction
+					simplex.del(2);
+					d.set(ab_c_ad);
 				}
-				else	// v_abc < 0 -> new search direction: ac_c_ab, ditch point d
+				else
 				{
-					simplex.del(1); // remove point b of the simplex list
-					d.set(ac_c_ab); // set new search direction
+					simplex.del(1);
+					d.set(ac_c_ab);
 				}
 			}
 			else if (amount_neg == 1 && amount_pos == 2)
 			{
-				if (v_acd < 0) // v_acd < 0 -> new search direction: -ad_c_ac, ditch point b
+				if (v_acd < PLANETHICNESS)
 				{
-
 					ad_c_ac.negate();
-
-					simplex.del(3); // remove point b of the simplex list
-					d.set(ad_c_ac); // set new search direction
+					simplex.del(3);
+					d.set(ad_c_ac);
 				}
-				else if (v_abd < 0) // v_abd < 0 ->  new search direction: -ab_c_ad, ditch point c
+				else if (v_abd < PLANETHICNESS)
 				{
 					ab_c_ad.negate();
-
-					simplex.del(2); // remove point b of the simplex list
-					d.set(ab_c_ad); // set new search direction
+					simplex.del(2);
+					d.set(ab_c_ad);
 				}
-				else	// v_abc < 0 -> new search direction: -ac_c_ab, ditch point d
+				else
 				{
-
 					ac_c_ab.negate();
-
-					simplex.del(1); // remove point b of the simplex list
-					d.set(ac_c_ab); // set new search direction
+					simplex.del(1);
+					d.set(ac_c_ab);
 				}
-			}
-			else
-			{
-				std::cout << "error(number pos/neg)" << std::endl;
 			}
 		}
 	}
-	else if (simplex.size() == 3) // 3 elements in the simplex
+	//simplex里有三个点时的处理策略
+	else if (simplex.size() == 3)
 	{
-		Point return_sd; // new search direction
-
+		Point return_sd;
 		Point b = simplex.get(1);
 		Point c = simplex.get(0);
 
-		Point ab = b - a; // b - a
-
-		Point ac = c - a; // c - a
-
-		Point abc = ab.cross(ac); // ABC = AB x AC  -> normal of the (triangle) surface
-
-		Point x;  x.x = 1;  x.y = 0;  x.z = 0;
-		Point y;  y.x = 0;  y.y = 1;  y.z = 0;
+		Point ab = b - a;
+		Point ac = c - a;
+		// ABC = AB x AC
+		Point abc = ab.cross(ac);
+		Point x(1,0,0);
+		Point y(0,1,0);
 		Point z = x.cross(y);
-
-		Point abc_c_ac = abc.cross(ac); // ABC x AC
-		Point ab_c_abc = ab.cross(abc); // AB x ABC
+		// ABC x AC
+		Point abc_c_ac = abc.cross(ac);
+		// AB x ABC
+		Point ab_c_abc = ab.cross(abc);
 
 		if (abc_c_ac.dot(a0) > 0)
 		{
@@ -424,21 +422,15 @@ bool containsOrigin(simplex& simplex, Point& d)
 				}
 			}
 		}
-
 		d.set(return_sd);
 		return false;
 	}
-	else if (simplex.size() == 2) // 2 elements in the simplex
+	//simplex里有两个点时的处理策略
+	else if (simplex.size() == 2)
 	{
-		Point b = simplex.get(0); // get the first element
- 
-		Point ab; // b - a
-		ab.x = b.x - a.x;
-		ab.y = b.y - a.y;
-		ab.z = b.z - a.z;
-
+		Point b = simplex.get(0);
+		Point ab = b - a;
 		Point triple_cp;
-
 		if (ab.dot(a0) > 0)
 		{
 			triple_cp = tripleCrossProd(ab, a0, ab);
@@ -454,37 +446,71 @@ bool containsOrigin(simplex& simplex, Point& d)
 	}
 	return false;
 };
-// check inside simplex evolution (2, 3, 4 points inside the simplex list)
 
-// GJK functions
-
-//main GJK function
-bool gjk(Shape A, Shape B) // main gjk function -> point A, point B, dimension of A(=amount of elements in the point A)
+bool gjk(Shape A, Shape B)
 {
-	simplex simplex; // list of points of the simplex stored here
+	bool check_failsafe = true;
+	bool check = true;
+	int i = 0;
+	simplex simplex;
 
-	Point mma = middlePoint(A);
-
-	Point mmb = middlePoint(B);
-
-	Point d = mma - mmb;
-
-	simplex.set_zero(); // set everything to zero
-
-	simplex.add(support(A, B, d));
-
-	d.negate();
-
-	while (true)
+	while (check_failsafe)
 	{
-		simplex.add(support(A, B, d));
-		if (simplex.getLast().dot(d) <= 0) // no collision -> break
+		Point mma = middlePoint(A);
+		Point mmb = middlePoint(B);
+		Point d = mma - mmb;
+		//迭代10次如还没判断是否包含，则随机生成新的方向。如情况：添加A，删除B；添加B，删除A；不断循环往复
+		if (i > 10)
 		{
-			return false;
+			i = 0;
+			check_failsafe = true;
+			check = true;
+			int r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0;
+			while (r1 == 0 || r2 == 0 || r3 == 0 || r4 == 0 || r5 == 0 || r6 == 0)
+			{
+				r1 = rand() % 19 + (-9);
+				r2 = rand() % 19 + (-9);
+				r3 = rand() % 19 + (-9);
+				r4 = rand() % 19 + (-9);
+				r5 = rand() % 19 + (-9);
+				r6 = rand() % 19 + (-9);
+			}
+			//随机生成新的方向
+			d.x = (double)r1 / (double)r2;
+			d.y = (double)r3 / (double)r4;
+			d.z = (double)r5 / (double)r6;
 		}
-		else if (containsOrigin(simplex, d))
+		simplex.set_zero();
+		simplex.add(support(A, B, d));
+		d.negate();
+		while (check)
 		{
-			return true;
+			simplex.add(support(A, B, d));
+			if (simplex.size() == 4)
+			{
+				++i;
+			}
+			//没有发生碰撞
+			if (simplex.getLast().dot(d) <= 0)
+			{
+				check_failsafe = false;
+				check = false;
+			}
+			else
+			{
+				//发生了碰撞
+				if (containsOrigin(simplex, d))
+				{
+					check = true;
+					check_failsafe = false;
+					break;
+				}
+				else if (i > 10)
+				{
+					check = false;
+				}
+			}
 		}
 	}
+	return check;
 };

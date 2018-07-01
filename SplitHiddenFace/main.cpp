@@ -1,14 +1,13 @@
 #include "stdafx.h"
-#include <queue>
 
 void processNode(FbxNode* _pNode)
 {
 	//只处理meshNode
 	std::queue<FbxNode*>que;
 	que.push(_pNode);
-	std::vector<FbxMesh*>meshVector;
 	while (!que.empty())
 	{
+		std::vector<FbxMesh*>meshVector;
 		FbxNode* queNode = que.front();
 		que.pop();
 		if (queNode->GetNodeAttribute())
@@ -17,8 +16,9 @@ void processNode(FbxNode* _pNode)
 			{
 			case FbxNodeAttribute::eMesh:
 				//暂时删除！！
-				holeRepair(queNode);
+				//meshRepair(queNode);
 				meshVector.push_back(queNode->GetMesh());
+				splitHiddenFace(meshVector);
 				break;
 			case FbxNodeAttribute::eLight:
 				FBXSDK_printf("load LightNode\n");
@@ -42,7 +42,7 @@ void processNode(FbxNode* _pNode)
 
 int main()
 {
-	FbxString lFilePath("../first_fbx/sceneTest17_0.fbx");
+	FbxString lFilePath("../First_Step_For_Task/weixch_sceneTest17_0.fbx");
 	//FbxString lFilePath("../first_fbx/test_0.fbx");
 	//FbxString lFilePath("chenweixing_sceneTest17_0.fbx");
 	FbxManager* lManager = NULL;
@@ -63,7 +63,7 @@ int main()
 	else {
 		FBXSDK_printf("Call to LoadScene() failed.\n");
 	}
-	const char* lFilename = "weixch_sceneTest17_0.fbx";
+	const char* lFilename = "../First_Step_For_Task/removeHiddenFace.fbx";
 	FbxExporter* lExporter = FbxExporter::Create(lManager, "");
 	bool lExportStatus = lExporter->Initialize(lFilename, -1, lManager->GetIOSettings());
 	if (!lExportStatus) {
