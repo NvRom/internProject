@@ -35,9 +35,10 @@ public:
 	Point negate();
 	double dot(Point d);
 	Point cross(Point cpt);
-	void set(Point set);
+	void set(Point p);
 	bool equal(Point& p);
 	Point operator-(Point rhs);
+	Point operator+(Point rhs);
 };
 
 double absoluteValue(Point v);

@@ -4,39 +4,30 @@
 void processNode(FbxNode* _pNode)
 {
 	//只处理meshNode
-	std::queue<FbxNode*>que;
-	que.push(_pNode);
-	std::vector<FbxMesh*>meshVector;
-	while (!que.empty())
+	if (_pNode->GetNodeAttribute())
 	{
-		FbxNode* queNode = que.front();
-		que.pop();
-		if (queNode->GetNodeAttribute())
+		switch (_pNode->GetNodeAttribute()->GetAttributeType())
 		{
-			switch (queNode->GetNodeAttribute()->GetAttributeType())
-			{
-			case FbxNodeAttribute::eMesh:
-				//暂时删除！！
-				holeRepair(queNode);
-				meshVector.push_back(queNode->GetMesh());
-				break;
-			case FbxNodeAttribute::eLight:
-				FBXSDK_printf("load LightNode\n");
-				break;
-			case  FbxNodeAttribute::eCamera:
-				FBXSDK_printf("load CameraNode\n");
-				break;
-			default:
-				break;
-			}
+		case FbxNodeAttribute::eMesh:
+			//暂时删除！！
+			holeRepair(_pNode);
+			break;
+		case FbxNodeAttribute::eLight:
+			FBXSDK_printf("load LightNode\n");
+			break;
+		case  FbxNodeAttribute::eCamera:
+			FBXSDK_printf("load CameraNode\n");
+			break;
+		default:
+			break;
 		}
-		//GetChildCount(param)默认为false，如果为true，则会迭代计算后续孩子的个数
-		//迭代访问所有的node
-		int NumNode = queNode->GetChildCount();
-		for (int i = 0; i < NumNode; ++i)
-		{
-			que.push(queNode->GetChild(i));
-		}
+	}
+	//GetChildCount(param)默认为false，如果为true，则会迭代计算后续孩子的个数
+	//迭代访问所有的node
+	int NumNode = _pNode->GetChildCount();
+	for (int i = 0; i < NumNode; ++i)
+	{
+		processNode(_pNode->GetChild(i));
 	}
 }
 

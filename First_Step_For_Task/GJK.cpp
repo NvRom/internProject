@@ -1,5 +1,4 @@
 #include <stdafx.h>
-#include "GJK.h"
 
 
 Point Point::negate()
@@ -59,6 +58,15 @@ Point Point::operator-(Point rhs)
 	returnPoint.x = this->x - rhs.x;
 	returnPoint.y = this->y - rhs.y;
 	returnPoint.z = this->z - rhs.z;
+	return returnPoint;
+}
+
+Point Point::operator+(Point rhs)
+{
+	Point returnPoint;
+	returnPoint.x = this->x + rhs.x;
+	returnPoint.y = this->y + rhs.y;
+	returnPoint.z = this->z + rhs.z;
 	return returnPoint;
 }
 
@@ -308,17 +316,17 @@ bool containsOrigin(simplex& simplex, Point& d)
 		int amount_neg = 0;
 		int amount_pos = 0;
 
-		if (v_acd > 0)
+		if (v_acd > PLANETHICNESS)
 			amount_pos++;
-		else
+		else 
 			amount_neg++;
 
-		if (v_abd > 0)
+		if (v_abd > PLANETHICNESS)
 			amount_pos++;
-		else
+		else 
 			amount_neg++;
 
-		if (v_abc > 0)
+		if (v_abc > PLANETHICNESS)
 			amount_pos++;
 		else
 			amount_neg++;
@@ -336,12 +344,12 @@ bool containsOrigin(simplex& simplex, Point& d)
 			if (amount_neg == 2 && amount_pos == 1)
 			{
 
-				if(v_acd > 0) // v_acd < 0 -> new search direction: ad_c_ac, ditch point b
+				if(v_acd > PLANETHICNESS) // v_acd < 0 -> new search direction: ad_c_ac, ditch point b
 				{
 					simplex.del(3); // remove point b of the simplex list
 					d.set(ad_c_ac); // set new search direction
 				}
-				else if (v_abd > 0) // v_abd < 0 ->  new search direction: ab_c_ad, ditch point c
+				else if (v_abd > PLANETHICNESS) // v_abd < 0 ->  new search direction: ab_c_ad, ditch point c
 				{
 					simplex.del(2); // remove point b of the simplex list
 					d.set(ab_c_ad); // set new search direction
@@ -354,7 +362,7 @@ bool containsOrigin(simplex& simplex, Point& d)
 			}
 			else if (amount_neg == 1 && amount_pos == 2)
 			{
-				if (v_acd < 0) // v_acd < 0 -> new search direction: -ad_c_ac, ditch point b
+				if (v_acd < PLANETHICNESS) // v_acd < 0 -> new search direction: -ad_c_ac, ditch point b
 				{
 
 					ad_c_ac.negate();
@@ -362,7 +370,7 @@ bool containsOrigin(simplex& simplex, Point& d)
 					simplex.del(3); // remove point b of the simplex list
 					d.set(ad_c_ac); // set new search direction
 				}
-				else if (v_abd < 0) // v_abd < 0 ->  new search direction: -ab_c_ad, ditch point c
+				else if (v_abd < PLANETHICNESS) // v_abd < 0 ->  new search direction: -ab_c_ad, ditch point c
 				{
 					ab_c_ad.negate();
 
@@ -445,7 +453,6 @@ bool containsOrigin(simplex& simplex, Point& d)
 				}
 			}
 		}
-
 		d.set(return_sd);
 		return false;
 	}
@@ -479,33 +486,69 @@ bool containsOrigin(simplex& simplex, Point& d)
 
 // GJK functions
 
-//main GJK function
-bool gjk(Shape A, Shape B) // main gjk function -> point A, point B, dimension of A(=amount of elements in the point A)
+//GJK主函数
+bool gjk(Shape A, Shape B)
 {
-	simplex simplex; // list of points of the simplex stored here
+	bool check_failsafe = true;
+	bool check = true;
+	int i = 0;
+	simplex simplex;
 
-	Point mma = middlePoint(A);
-
-	Point mmb = middlePoint(B);
-
-	Point d = mma - mmb;
-
-	simplex.set_zero(); // set everything to zero
-
-	simplex.add(support(A, B, d));
-
-	d.negate();
-
-	while (true)
+	while (check_failsafe)
 	{
-		simplex.add(support(A, B, d));
-		if (simplex.getLast().dot(d) < 0) // no collision -> break
+		Point mma = middlePoint(A);
+		Point mmb = middlePoint(B);
+		Point d = mma - mmb;
+		//迭代10次如还没判断是否包含，则随机生成新的方向。如情况：添加A，删除B；添加B，删除A；不断循环往复
+		if (i > 10)
 		{
-			return false;
+			i = 0;
+			check_failsafe = true;
+			check = true;
+			int r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0;
+			while (r1 == 0 || r2 == 0 || r3 == 0 || r4 == 0 || r5 == 0 || r6 == 0)
+			{
+				r1 = rand() % 19 + (-9);
+				r2 = rand() % 19 + (-9);
+				r3 = rand() % 19 + (-9);
+				r4 = rand() % 19 + (-9);
+				r5 = rand() % 19 + (-9);
+				r6 = rand() % 19 + (-9);
+			}
+			//随机生成新的方向
+			d.x = (double)r1 / (double)r2;
+			d.y = (double)r3 / (double)r4;
+			d.z = (double)r5 / (double)r6;
 		}
-		else if (containsOrigin(simplex, d))
+		simplex.set_zero(); // set everything to zero
+		simplex.add(support(A, B, d));
+		d.negate();
+		while (check)
 		{
-			return true;
+			simplex.add(support(A, B, d));
+			if (simplex.size() == 4)
+			{
+				++i;
+			}
+			if (simplex.getLast().dot(d) <= 0) // no collision -> break
+			{
+				check_failsafe = false;
+				check = false;
+			}
+			else
+			{
+				if (containsOrigin(simplex, d))
+				{
+					check = true;
+					check_failsafe = false;
+					break;
+				}
+				else if (i > 10)
+				{
+					check = false;
+				}
+			}
 		}
 	}
+	return check;
 };
